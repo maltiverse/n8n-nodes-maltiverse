@@ -1,0 +1,43 @@
+{
+  "name": "n8n-nodes-maltiverse",
+  "version": "0.1.0",
+  "description": "n8n community node for interacting with the Maltiverse API",
+  "license": "MIT",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "maltiverse",
+    "threat-intelligence",
+    "ioc"
+  ],
+  "author": {
+    "name": "Codex"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "lint": "n8n-node-dev lint nodes credentials",
+    "prepublishOnly": "npm run build && npm run lint"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/MaltiverseApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Maltiverse/Maltiverse.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "gulp": "^5.0.0",
+    "n8n-core": "^1.83.0",
+    "n8n-node-dev": "^1.77.0",
+    "n8n-workflow": "^1.83.0",
+    "typescript": "^5.8.2"
+  }
+}
