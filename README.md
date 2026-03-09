@@ -10,7 +10,7 @@ Community node for interacting with the Maltiverse API from n8n.
 
 ## Credentials
 
-- `Base URL`: Maltiverse API base URL, for example `http://localhost:8000`
+- `Base URL`: Maltiverse API base URL, defaulting to `https://api.maltiverse.com`. You can override it for development, for example with `http://localhost:8000`
 - `Access Token`: token sent as `Authorization: Bearer <token>`
 
 ## Development

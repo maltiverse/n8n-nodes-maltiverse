@@ -12,7 +12,7 @@ export class MaltiverseApi implements ICredentialType {
 			displayName: 'Base URL',
 			name: 'baseUrl',
 			type: 'string',
-			default: 'http://localhost:8000',
+			default: 'https://api.maltiverse.com',
 			placeholder: 'https://api.maltiverse.com',
 			required: true,
 		},
