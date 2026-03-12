@@ -5,3 +5,5 @@ dist/
 *.log
 .n8n/
 .vscode/
+.npm/
+package-lock.json
