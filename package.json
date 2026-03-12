@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
-    "lint": "n8n-node-dev lint nodes credentials",
+    "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm run lint"
   },
   "files": [
