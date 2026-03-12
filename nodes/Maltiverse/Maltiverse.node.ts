@@ -282,6 +282,38 @@ async function maltiverseIndicatorLookup(
 	});
 }
 
+function extractSearchSources(responseData: IDataObject | IDataObject[]): IDataObject[] | null {
+	if (Array.isArray(responseData)) {
+		return null;
+	}
+
+	const hitsWrapper = responseData.hits;
+	if (!hitsWrapper || typeof hitsWrapper !== 'object' || Array.isArray(hitsWrapper)) {
+		return null;
+	}
+
+	const rawHits = (hitsWrapper as IDataObject).hits;
+	if (!Array.isArray(rawHits)) {
+		return null;
+	}
+
+	const sources: IDataObject[] = [];
+	for (const hit of rawHits) {
+		if (!hit || typeof hit !== 'object' || Array.isArray(hit)) {
+			return null;
+		}
+
+		const source = (hit as IDataObject)._source;
+		if (!source || typeof source !== 'object' || Array.isArray(source)) {
+			return null;
+		}
+
+		sources.push(source as IDataObject);
+	}
+
+	return sources;
+}
+
 export class Maltiverse implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Maltiverse',
@@ -357,6 +389,13 @@ export class Maltiverse implements INodeType {
 						qs,
 						json: true,
 					});
+
+					if (!responseFormat) {
+						const sourceHits = extractSearchSources(responseData);
+						if (sourceHits !== null) {
+							responseData = sourceHits;
+						}
+					}
 				} else if (operation === 'count') {
 					const query = this.getNodeParameter('query', i) as string;
 					const dataLayer = this.getNodeParameter('dataLayer', i) as string;
