@@ -33,7 +33,7 @@ const operations: INodeProperties[] = [
 			{
 				name: 'Upload',
 				value: 'upload',
-				description: 'Upload a single IoC using the generic /ioc endpoint',
+				description: 'Upload a single IoC to the tenant (platform) scope using the generic /ioc endpoint',
 				action: 'Upload indicator',
 			},
 			{
@@ -209,25 +209,8 @@ const uploadFields: INodeProperties[] = [
 		default:
 			'{\n  "type": "ip",\n  "ip_addr": "144.22.1.25",\n  "classification": "malicious",\n  "blacklist": [\n    {\n      "source": "test",\n      "description": "Test",\n      "first_seen": "2018-02-17 09:20:27",\n      "last_seen": "2018-02-17 09:20:27"\n    }\n  ]\n}',
 		required: true,
-		description: 'Full IoC payload sent to the generic /ioc endpoint',
-	},
-	{
-		displayName: 'Index Scope',
-		name: 'indexScope',
-		type: 'options',
-		displayOptions: {
-			show: {
-				operation: ['upload'],
-			},
-		},
-		options: [
-			{ name: 'Default', value: '' },
-			{ name: 'Open', value: 'open' },
-			{ name: 'Restricted', value: 'restricted' },
-			{ name: 'Sandbox', value: 'sandbox' },
-			{ name: 'Tenant', value: 'tenant' },
-		],
-		default: '',
+		description:
+			'Full IoC payload sent to the generic /ioc endpoint. Uploads always write to the tenant (platform) scope.',
 	},
 ];
 
@@ -321,7 +304,7 @@ export class Maltiverse implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
-		description: 'Interact with the Maltiverse API for reading and uploading IoCs',
+		description: 'Interact with the Maltiverse API for reading indicators and uploading IoCs to tenant (platform)',
 		defaults: {
 			name: 'Maltiverse',
 		},
@@ -414,17 +397,13 @@ export class Maltiverse implements INodeType {
 					const indicatorJson = normalizeIndicatorPayload(
 						this.getNodeParameter('indicatorJson', i) as IDataObject | string,
 					);
-					const indexScope = this.getNodeParameter('indexScope', i) as string;
-					const qs: IDataObject = {};
-
-					if (indexScope) {
-						qs.index_scope = indexScope;
-					}
 
 					responseData = await maltiverseApiRequest(this, {
 						method: 'POST',
 						url: '/ioc',
-						qs,
+						qs: {
+							index_scope: 'tenant',
+						},
 						body: indicatorJson,
 						json: true,
 					});
