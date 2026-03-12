@@ -36,7 +36,49 @@ const operations: INodeProperties[] = [
 				description: 'Upload a single IoC using the generic /ioc endpoint',
 				action: 'Upload indicator',
 			},
+			{
+				name: 'Get',
+				value: 'get',
+				description: 'Get a main Maltiverse indicator by type and value',
+				action: 'Get indicator',
+			},
 		],
+	},
+];
+
+const getFields: INodeProperties[] = [
+	{
+		displayName: 'Indicator Type',
+		name: 'indicatorType',
+		type: 'options',
+		displayOptions: {
+			show: {
+				operation: ['get'],
+			},
+		},
+		options: [
+			{ name: 'Hostname', value: 'hostname' },
+			{ name: 'IP', value: 'ip' },
+			{ name: 'Email', value: 'email' },
+			{ name: 'URL', value: 'url' },
+			{ name: 'Sample', value: 'sample' },
+		],
+		default: 'ip',
+		required: true,
+	},
+	{
+		displayName: 'Value',
+		name: 'indicatorValue',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['get'],
+			},
+		},
+		default: '',
+		required: true,
+		description:
+			'For IP, enter a valid public IP address. For hostname, enter a domain name. For email, enter an email address. For URL, enter the full URL. For sample, enter a SHA256 hash.',
 	},
 ];
 
@@ -226,6 +268,20 @@ async function maltiverseApiRequest(
 	}
 }
 
+async function maltiverseIndicatorGet(
+	context: IExecuteFunctions,
+	indicatorType: string,
+	indicatorValue: string,
+): Promise<IDataObject | IDataObject[]> {
+	const encodedValue = encodeURIComponent(indicatorValue);
+
+	return await maltiverseApiRequest(context, {
+		method: 'GET',
+		url: `/${indicatorType}/${encodedValue}`,
+		json: true,
+	});
+}
+
 export class Maltiverse implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Maltiverse',
@@ -250,6 +306,7 @@ export class Maltiverse implements INodeType {
 			...operations,
 			...queryFields,
 			...uploadFields,
+			...getFields,
 		],
 	};
 
@@ -333,6 +390,11 @@ export class Maltiverse implements INodeType {
 						body: indicatorJson,
 						json: true,
 					});
+				} else if (operation === 'get') {
+					const indicatorType = this.getNodeParameter('indicatorType', i) as string;
+					const indicatorValue = this.getNodeParameter('indicatorValue', i) as string;
+
+					responseData = await maltiverseIndicatorGet(this, indicatorType, indicatorValue);
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`, {
 						itemIndex: i,
