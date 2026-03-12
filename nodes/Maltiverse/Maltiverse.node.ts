@@ -37,23 +37,23 @@ const operations: INodeProperties[] = [
 				action: 'Upload indicator',
 			},
 			{
-				name: 'Get',
-				value: 'get',
-				description: 'Get a main Maltiverse indicator by type and value',
-				action: 'Get indicator',
+				name: 'Lookup',
+				value: 'lookup',
+				description: 'Lookup a main Maltiverse indicator by type and value',
+				action: 'Lookup indicator',
 			},
 		],
 	},
 ];
 
-const getFields: INodeProperties[] = [
+const lookupFields: INodeProperties[] = [
 	{
 		displayName: 'Indicator Type',
 		name: 'indicatorType',
 		type: 'options',
 		displayOptions: {
 			show: {
-				operation: ['get'],
+				operation: ['lookup'],
 			},
 		},
 		options: [
@@ -72,7 +72,7 @@ const getFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: {
 			show: {
-				operation: ['get'],
+				operation: ['lookup'],
 			},
 		},
 		default: '',
@@ -268,7 +268,7 @@ async function maltiverseApiRequest(
 	}
 }
 
-async function maltiverseIndicatorGet(
+async function maltiverseIndicatorLookup(
 	context: IExecuteFunctions,
 	indicatorType: string,
 	indicatorValue: string,
@@ -306,7 +306,7 @@ export class Maltiverse implements INodeType {
 			...operations,
 			...queryFields,
 			...uploadFields,
-			...getFields,
+			...lookupFields,
 		],
 	};
 
@@ -390,11 +390,11 @@ export class Maltiverse implements INodeType {
 						body: indicatorJson,
 						json: true,
 					});
-				} else if (operation === 'get') {
+				} else if (operation === 'lookup') {
 					const indicatorType = this.getNodeParameter('indicatorType', i) as string;
 					const indicatorValue = this.getNodeParameter('indicatorValue', i) as string;
 
-					responseData = await maltiverseIndicatorGet(this, indicatorType, indicatorValue);
+					responseData = await maltiverseIndicatorLookup(this, indicatorType, indicatorValue);
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`, {
 						itemIndex: i,

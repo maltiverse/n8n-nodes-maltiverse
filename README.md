@@ -6,7 +6,7 @@ Community node for interacting with the Maltiverse API from n8n.
 
 - Search indicators with `/search`
 - Count matches with `/count`
-- Get a hostname, IP, email, URL or sample directly from its main endpoint
+- Lookup a hostname, IP, email, URL or sample directly from its main endpoint
 - Upload indicators with the generic `/ioc` endpoint
 
 ## Credentials
@@ -31,4 +31,4 @@ Then open `http://localhost:5678`, create `Maltiverse API` credentials, and add 
 
 ## Notes
 
-The `Get` operation reads the main Maltiverse indicator endpoints directly and returns the API payload as-is. The upload operation expects the full Maltiverse indicator payload as JSON. This first version intentionally focuses on `/search`, `/count`, direct indicator reads and the generic `/ioc` endpoint to keep the integration simple.
+The `Lookup` operation reads the main Maltiverse indicator endpoints directly and returns the API payload as-is. The upload operation expects the full Maltiverse indicator payload as JSON. This first version intentionally focuses on `/search`, `/count`, direct indicator reads and the generic `/ioc` endpoint to keep the integration simple.
