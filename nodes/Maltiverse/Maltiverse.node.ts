@@ -106,13 +106,12 @@ const queryFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{ name: 'Default', value: '' },
-			{ name: 'Community', value: 'community' },
 			{ name: 'Intelligence', value: 'intelligence' },
 			{ name: 'Merge', value: 'merge' },
 			{ name: 'Platform', value: 'platform' },
 		],
-		default: '',
+		default: 'intelligence',
+		required: true,
 	},
 	{
 		displayName: 'From',
