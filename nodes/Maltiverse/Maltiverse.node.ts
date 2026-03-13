@@ -37,6 +37,12 @@ const operations: INodeProperties[] = [
 				action: 'Upload indicator',
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				description: 'Delete a single IoC from the tenant (platform) scope using the generic /ioc endpoint',
+				action: 'Delete indicator',
+			},
+			{
 				name: 'Lookup',
 				value: 'lookup',
 				description: 'Lookup a main Maltiverse indicator by type and value',
@@ -203,14 +209,14 @@ const uploadFields: INodeProperties[] = [
 		type: 'json',
 		displayOptions: {
 			show: {
-				operation: ['upload'],
+				operation: ['upload', 'delete'],
 			},
 		},
 		default:
 			'{\n  "type": "ip",\n  "ip_addr": "144.22.1.25",\n  "classification": "malicious",\n  "blacklist": [\n    {\n      "source": "test",\n      "description": "Test",\n      "first_seen": "2018-02-17 09:20:27",\n      "last_seen": "2018-02-17 09:20:27"\n    }\n  ]\n}',
 		required: true,
 		description:
-			'Full IoC payload sent to the generic /ioc endpoint. Uploads always write to the tenant (platform) scope.',
+			'Indicator payload sent to the generic /ioc endpoint. Uploads and deletes always write to the tenant (platform) scope.',
 	},
 ];
 
@@ -400,6 +406,20 @@ export class Maltiverse implements INodeType {
 
 					responseData = await maltiverseApiRequest(this, {
 						method: 'POST',
+						url: '/ioc',
+						qs: {
+							index_scope: 'tenant',
+						},
+						body: indicatorJson,
+						json: true,
+					});
+				} else if (operation === 'delete') {
+					const indicatorJson = normalizeIndicatorPayload(
+						this.getNodeParameter('indicatorJson', i) as IDataObject | string,
+					);
+
+					responseData = await maltiverseApiRequest(this, {
+						method: 'DELETE',
 						url: '/ioc',
 						qs: {
 							index_scope: 'tenant',
