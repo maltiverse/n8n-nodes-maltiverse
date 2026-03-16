@@ -11,6 +11,8 @@ Community node for interacting with the Maltiverse API from n8n.
 - Lookup a hostname, IP, email, URL or sample directly from its main endpoint
 - Upload indicators with the generic `/ioc` endpoint
   - Uploads always target the tenant (platform) scope
+- Delete indicators with the generic `/ioc` endpoint
+  - Deletes always target the tenant (platform) scope
 
 ## Credentials
 
@@ -34,4 +36,4 @@ Then open `http://localhost:5678`, create `Maltiverse API` credentials, and add 
 
 ## Notes
 
-The `Search` operation supports both the default Maltiverse format and `stix2`. In the Maltiverse format, the node returns one n8n item per result; in `stix2`, it returns the raw STIX 2 payload. The `Lookup` operation reads the main Maltiverse indicator endpoints directly and returns the API payload as-is. The upload operation expects the full Maltiverse indicator payload as JSON and always writes to the tenant (platform) scope. This first version intentionally focuses on `/search`, `/count`, direct indicator reads and the generic `/ioc` endpoint to keep the integration simple.
+The `Search` operation supports both the default Maltiverse format and `stix2`. In the Maltiverse format, the node returns one n8n item per result; in `stix2`, it returns the raw STIX 2 payload. The `Lookup` operation reads the main Maltiverse indicator endpoints directly and returns the API payload as-is. The upload and delete operations expect the indicator payload as JSON and always write to the tenant (platform) scope. This first version intentionally focuses on `/search`, `/count`, direct indicator reads and the generic `/ioc` endpoint to keep the integration simple.
