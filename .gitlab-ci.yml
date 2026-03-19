@@ -61,13 +61,31 @@ package-smoke:
   script:
     - npm run build
     - |
-      TARBALL="$(node -e '
-        const { execSync } = require("child_process");
-        const output = execSync("npm pack --json", { encoding: "utf8" });
-        process.stdout.write(JSON.parse(output)[0].filename);
-      ')"
-      test -n "$TARBALL"
-      tar -tf "$TARBALL" | grep -q '^package/package.json$'
-      tar -tf "$TARBALL" | grep -q '^package/dist/nodes/Maltiverse/Maltiverse.node.js$'
-      tar -tf "$TARBALL" | grep -q '^package/dist/credentials/MaltiverseApi.credentials.js$'
-      tar -tf "$TARBALL" | grep -q '^package/dist/nodes/Maltiverse/maltiverse.svg$'
+      npm pack --json > pack-output.json
+      node <<'EOF'
+      const fs = require('fs');
+      const { execFileSync } = require('child_process');
+
+      const output = JSON.parse(fs.readFileSync('pack-output.json', 'utf8'));
+      const tarball = output[0]?.filename;
+      if (!tarball) {
+        throw new Error('npm pack did not return a tarball filename');
+      }
+
+      const entries = execFileSync('tar', ['-tf', tarball], { encoding: 'utf8' })
+        .trim()
+        .split('\n');
+
+      const requiredEntries = [
+        'package/package.json',
+        'package/dist/nodes/Maltiverse/Maltiverse.node.js',
+        'package/dist/credentials/MaltiverseApi.credentials.js',
+        'package/dist/nodes/Maltiverse/maltiverse.svg',
+      ];
+
+      for (const entry of requiredEntries) {
+        if (!entries.includes(entry)) {
+          throw new Error(`Missing packaged file: ${entry}`);
+        }
+      }
+      EOF
