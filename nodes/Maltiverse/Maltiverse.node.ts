@@ -19,40 +19,58 @@ const operations: INodeProperties[] = [
 		default: 'search',
 		options: [
 			{
-				name: 'Search',
-				value: 'search',
-				description: 'Search indicators using a Lucene query with /search',
-				action: 'Search indicators',
-			},
-			{
-				name: 'Count',
-				value: 'count',
-				description: 'Count indicators matching a Lucene query with /count',
-				action: 'Count indicators',
+				name: 'Lookup',
+				value: 'lookup',
+				description: 'Retrieve a single indicator from the selected dataset',
+				action: 'Retrieve an indicator from a dataset',
 			},
 			{
 				name: 'Upload',
 				value: 'upload',
-				description: 'Upload a single IoC to the tenant (platform) scope using the generic /ioc endpoint',
-				action: 'Upload indicator',
+				description: 'Upload a single indicator to the tenant (platform) dataset',
+				action: 'Upload an indicator to tenant (platform)',
+			},
+			{
+				name: 'Search',
+				value: 'search',
+				description: 'Search indicators in the selected dataset using a Lucene query',
+				action: 'Search indicators in a dataset',
+			},
+			{
+				name: 'Count',
+				value: 'count',
+				description: 'Count indicators in the selected dataset using a Lucene query',
+				action: 'Count indicators in a dataset',
 			},
 			{
 				name: 'Delete',
 				value: 'delete',
-				description: 'Delete a single IoC from the tenant (platform) scope using the generic /ioc endpoint',
-				action: 'Delete indicator',
-			},
-			{
-				name: 'Lookup',
-				value: 'lookup',
-				description: 'Lookup a main Maltiverse indicator by type and value',
-				action: 'Lookup indicator',
+				description: 'Delete a single indicator from the tenant (platform) dataset',
+				action: 'Delete an indicator from tenant (platform)',
 			},
 		],
 	},
 ];
 
 const lookupFields: INodeProperties[] = [
+	{
+		displayName: 'Dataset',
+		name: 'dataLayer',
+		type: 'options',
+		displayOptions: {
+			show: {
+				operation: ['lookup'],
+			},
+		},
+		options: [
+			{ name: 'Intelligence', value: 'intelligence' },
+			{ name: 'Merge', value: 'merge' },
+			{ name: 'Platform', value: 'platform' },
+		],
+		default: 'intelligence',
+		required: true,
+		description: 'Choose which Maltiverse dataset to read from',
+	},
 	{
 		displayName: 'Indicator Type',
 		name: 'indicatorType',
@@ -71,20 +89,77 @@ const lookupFields: INodeProperties[] = [
 		],
 		default: 'ip',
 		required: true,
+		description: 'Choose the kind of indicator you want to retrieve',
 	},
 	{
-		displayName: 'Value',
-		name: 'indicatorValue',
+		displayName: 'Hostname',
+		name: 'hostnameValue',
 		type: 'string',
 		displayOptions: {
 			show: {
 				operation: ['lookup'],
+				indicatorType: ['hostname'],
 			},
 		},
 		default: '',
 		required: true,
-		description:
-			'For IP, enter a valid public IP address. For hostname, enter a domain name. For email, enter an email address. For URL, enter the full URL. For sample, enter a SHA256 hash.',
+		description: 'Enter the domain name to retrieve',
+	},
+	{
+		displayName: 'IP Address',
+		name: 'ipValue',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['lookup'],
+				indicatorType: ['ip'],
+			},
+		},
+		default: '',
+		required: true,
+		description: 'Enter a valid public IP address to retrieve',
+	},
+	{
+		displayName: 'Email Address',
+		name: 'emailValue',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['lookup'],
+				indicatorType: ['email'],
+			},
+		},
+		default: '',
+		required: true,
+		description: 'Enter the email address to retrieve',
+	},
+	{
+		displayName: 'URL',
+		name: 'urlValue',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['lookup'],
+				indicatorType: ['url'],
+			},
+		},
+		default: '',
+		required: true,
+		description: 'Enter the full URL to retrieve',
+	},
+	{
+		displayName: 'SHA256',
+		name: 'sampleValue',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['lookup'],
+				indicatorType: ['sample'],
+			},
+		},
+		default: '',
+		required: true,
+		description: 'Enter the sample SHA256 hash to retrieve',
 	},
 ];
 
@@ -103,7 +178,7 @@ const queryFields: INodeProperties[] = [
 		description: 'Lucene query to send to Maltiverse',
 	},
 	{
-		displayName: 'Data Layer',
+		displayName: 'Dataset',
 		name: 'dataLayer',
 		type: 'options',
 		displayOptions: {
@@ -118,6 +193,7 @@ const queryFields: INodeProperties[] = [
 		],
 		default: 'intelligence',
 		required: true,
+		description: 'Choose which Maltiverse dataset to query',
 	},
 	{
 		displayName: 'From',
@@ -256,20 +332,6 @@ async function maltiverseApiRequest(
 	}
 }
 
-async function maltiverseIndicatorLookup(
-	context: IExecuteFunctions,
-	indicatorType: string,
-	indicatorValue: string,
-): Promise<IDataObject | IDataObject[]> {
-	const encodedValue = encodeURIComponent(indicatorValue);
-
-	return await maltiverseApiRequest(context, {
-		method: 'GET',
-		url: `/${indicatorType}/${encodedValue}`,
-		json: true,
-	});
-}
-
 function extractSearchSources(responseData: IDataObject | IDataObject[]): IDataObject[] | null {
 	if (Array.isArray(responseData)) {
 		return null;
@@ -300,6 +362,23 @@ function extractSearchSources(responseData: IDataObject | IDataObject[]): IDataO
 	}
 
 	return sources;
+}
+
+function getLookupValueParameterName(indicatorType: string): string {
+	switch (indicatorType) {
+		case 'hostname':
+			return 'hostnameValue';
+		case 'ip':
+			return 'ipValue';
+		case 'email':
+			return 'emailValue';
+		case 'url':
+			return 'urlValue';
+		case 'sample':
+			return 'sampleValue';
+		default:
+			throw new Error(`Unsupported indicator type: ${indicatorType}`);
+	}
 }
 
 export class Maltiverse implements INodeType {
@@ -428,10 +507,21 @@ export class Maltiverse implements INodeType {
 						json: true,
 					});
 				} else if (operation === 'lookup') {
+					const dataLayer = this.getNodeParameter('dataLayer', i) as string;
 					const indicatorType = this.getNodeParameter('indicatorType', i) as string;
-					const indicatorValue = this.getNodeParameter('indicatorValue', i) as string;
+					const indicatorValue = this.getNodeParameter(
+						getLookupValueParameterName(indicatorType),
+						i,
+					) as string;
 
-					responseData = await maltiverseIndicatorLookup(this, indicatorType, indicatorValue);
+					responseData = await maltiverseApiRequest(this, {
+						method: 'GET',
+						url: `/${indicatorType}/${encodeURIComponent(indicatorValue)}`,
+						qs: {
+							data_layer: dataLayer,
+						},
+						json: true,
+					});
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`, {
 						itemIndex: i,

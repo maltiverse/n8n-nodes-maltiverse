@@ -11,13 +11,22 @@
     "ioc"
   ],
   "author": {
-    "name": "Codex"
+    "name": "Maltiverse"
+  },
+  "homepage": "https://github.com/maltiverse/n8n-nodes-maltiverse#readme",
+  "bugs": {
+    "url": "https://github.com/maltiverse/n8n-nodes-maltiverse/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maltiverse/n8n-nodes-maltiverse.git"
   },
   "main": "index.js",
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "lint": "tsc --noEmit",
+    "scan:n8n": "npx @n8n/scan-community-package n8n-nodes-maltiverse",
     "prepublishOnly": "npm run build && npm run lint"
   },
   "files": [

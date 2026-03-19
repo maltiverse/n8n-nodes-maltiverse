@@ -14,6 +14,31 @@ default:
     - npm config set cache .npm --global
     - npm install
 
+package-metadata:
+  stage: validate
+  script:
+    - |
+      node <<'EOF'
+      const pkg = require('./package.json');
+      const requiredKeywords = ['n8n-community-node-package', 'n8n'];
+      for (const keyword of requiredKeywords) {
+        if (!pkg.keywords || !pkg.keywords.includes(keyword)) {
+          throw new Error(`Missing required keyword: ${keyword}`);
+        }
+      }
+      if (!pkg.license) throw new Error('Missing license');
+      if (!pkg.repository || !pkg.repository.url) throw new Error('Missing repository metadata');
+      if (!pkg.homepage) throw new Error('Missing homepage metadata');
+      if (!pkg.bugs || !pkg.bugs.url) throw new Error('Missing bugs metadata');
+      if (!pkg.n8n || !Array.isArray(pkg.n8n.nodes) || pkg.n8n.nodes.length === 0) {
+        throw new Error('Missing n8n.nodes metadata');
+      }
+      if (!pkg.n8n || !Array.isArray(pkg.n8n.credentials) || pkg.n8n.credentials.length === 0) {
+        throw new Error('Missing n8n.credentials metadata');
+      }
+      console.log('package metadata looks valid for an n8n community node');
+      EOF
+
 build:
   stage: validate
   script:
@@ -21,6 +46,10 @@ build:
     - test -f dist/nodes/Maltiverse/Maltiverse.node.js
     - test -f dist/credentials/MaltiverseApi.credentials.js
     - test -f dist/nodes/Maltiverse/maltiverse.svg
+  artifacts:
+    when: always
+    paths:
+      - dist/
 
 lint:
   stage: validate
@@ -31,4 +60,14 @@ package-smoke:
   stage: validate
   script:
     - npm run build
-    - npm pack --dry-run
+    - |
+      TARBALL="$(node -e '
+        const { execSync } = require("child_process");
+        const output = execSync("npm pack --json", { encoding: "utf8" });
+        process.stdout.write(JSON.parse(output)[0].filename);
+      ')"
+      test -n "$TARBALL"
+      tar -tf "$TARBALL" | grep -q '^package/package.json$'
+      tar -tf "$TARBALL" | grep -q '^package/dist/nodes/Maltiverse/Maltiverse.node.js$'
+      tar -tf "$TARBALL" | grep -q '^package/dist/credentials/MaltiverseApi.credentials.js$'
+      tar -tf "$TARBALL" | grep -q '^package/dist/nodes/Maltiverse/maltiverse.svg$'
