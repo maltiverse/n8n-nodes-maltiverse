@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  package-metadata:
+    name: Package Metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate package metadata
+        run: |
+          node <<'EOF'
+          const pkg = require('./package.json');
+          const requiredKeywords = ['n8n-community-node-package', 'n8n'];
+
+          for (const keyword of requiredKeywords) {
+            if (!pkg.keywords || !pkg.keywords.includes(keyword)) {
+              throw new Error(`Missing required keyword: ${keyword}`);
+            }
+          }
+
+          if (!pkg.license) throw new Error('Missing license');
+          if (!pkg.repository || !pkg.repository.url) throw new Error('Missing repository metadata');
+          if (!pkg.homepage) throw new Error('Missing homepage metadata');
+          if (!pkg.bugs || !pkg.bugs.url) throw new Error('Missing bugs metadata');
+          if (!pkg.n8n || !Array.isArray(pkg.n8n.nodes) || pkg.n8n.nodes.length === 0) {
+            throw new Error('Missing n8n.nodes metadata');
+          }
+          if (!pkg.n8n || !Array.isArray(pkg.n8n.credentials) || pkg.n8n.credentials.length === 0) {
+            throw new Error('Missing n8n.credentials metadata');
+          }
+
+          console.log('package metadata looks valid for an n8n community node');
+          EOF
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint
+        run: npm run lint
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build package
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          test -f dist/nodes/Maltiverse/Maltiverse.node.js
+          test -f dist/credentials/MaltiverseApi.credentials.js
+          test -f dist/nodes/Maltiverse/maltiverse.svg
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  package-smoke:
+    name: Package Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build package
+        run: npm run build
+
+      - name: Validate packaged files
+        run: |
+          npm pack --json > pack-output.json
+          node <<'EOF'
+          const fs = require('fs');
+          const { execFileSync } = require('child_process');
+
+          const output = JSON.parse(fs.readFileSync('pack-output.json', 'utf8'));
+          const tarball = output[0]?.filename;
+          if (!tarball) {
+            throw new Error('npm pack did not return a tarball filename');
+          }
+
+          const entries = execFileSync('tar', ['-tf', tarball], { encoding: 'utf8' })
+            .trim()
+            .split('\n');
+
+          const requiredEntries = [
+            'package/package.json',
+            'package/dist/nodes/Maltiverse/Maltiverse.node.js',
+            'package/dist/credentials/MaltiverseApi.credentials.js',
+            'package/dist/nodes/Maltiverse/maltiverse.svg',
+          ];
+
+          for (const entry of requiredEntries) {
+            if (!entries.includes(entry)) {
+              throw new Error(`Missing packaged file: ${entry}`);
+            }
+          }
+          EOF
