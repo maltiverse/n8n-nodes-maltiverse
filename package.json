@@ -21,6 +21,9 @@
     "type": "git",
     "url": "git+https://github.com/maltiverse/n8n-nodes-maltiverse.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "index.js",
   "scripts": {
     "build": "tsc && gulp build:icons",

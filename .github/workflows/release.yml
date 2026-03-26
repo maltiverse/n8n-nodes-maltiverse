@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish-npm:
+    name: Publish to npm
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build package
+        run: npm run build
+
+      - name: Verify packaged files
+        run: |
+          npm pack --json > pack-output.json
+          node <<'EOF'
+          const fs = require('fs');
+          const { execFileSync } = require('child_process');
+
+          const output = JSON.parse(fs.readFileSync('pack-output.json', 'utf8'));
+          const tarball = output[0]?.filename;
+          if (!tarball) {
+            throw new Error('npm pack did not return a tarball filename');
+          }
+
+          const entries = execFileSync('tar', ['-tf', tarball], { encoding: 'utf8' })
+            .trim()
+            .split('\n');
+
+          const requiredEntries = [
+            'package/README.md',
+            'package/package.json',
+            'package/dist/nodes/Maltiverse/Maltiverse.node.js',
+            'package/dist/credentials/MaltiverseApi.credentials.js',
+            'package/dist/nodes/Maltiverse/maltiverse.svg',
+          ];
+
+          for (const entry of requiredEntries) {
+            if (!entries.includes(entry)) {
+              throw new Error(`Missing packaged file: ${entry}`);
+            }
+          }
+          EOF
+
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance
