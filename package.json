@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-maltiverse",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "n8n community node for interacting with the Maltiverse API",
   "license": "MIT",
   "keywords": [
@@ -11,7 +11,8 @@
     "ioc"
   ],
   "author": {
-    "name": "Maltiverse"
+    "name": "Maltiverse",
+    "email": "dev@maltiverse.com"
   },
   "homepage": "https://github.com/maltiverse/n8n-nodes-maltiverse#readme",
   "bugs": {
