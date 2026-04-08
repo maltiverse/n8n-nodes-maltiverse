@@ -1,4 +1,9 @@
-import type { ICredentialType, INodeProperties } from 'n8n-workflow';
+import type {
+	IAuthenticateGeneric,
+	ICredentialTestRequest,
+	ICredentialType,
+	INodeProperties,
+} from 'n8n-workflow';
 
 export class MaltiverseApi implements ICredentialType {
 	name = 'maltiverseApi';
@@ -6,6 +11,27 @@ export class MaltiverseApi implements ICredentialType {
 	displayName = 'Maltiverse API';
 
 	documentationUrl = 'https://www.maltiverse.com';
+
+	authenticate: IAuthenticateGeneric = {
+		type: 'generic',
+		properties: {
+			headers: {
+				Authorization: '=Bearer {{$credentials.accessToken}}',
+				Accept: 'application/json',
+			},
+		},
+	};
+
+	test: ICredentialTestRequest = {
+		request: {
+			baseURL: '={{$credentials.baseUrl}}',
+			url: '/count',
+			qs: {
+				query: 'type:ip',
+				data_layer: 'intelligence',
+			},
+		},
+	};
 
 	properties: INodeProperties[] = [
 		{
