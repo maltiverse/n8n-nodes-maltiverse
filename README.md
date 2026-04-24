@@ -77,7 +77,7 @@ Retrieves a single indicator from the selected dataset.
   - `Hostname`: enter a domain name
   - `IP Address`: enter a valid public IP address
   - `Email Address`: enter an email address
-  - `URL`: enter the full URL
+  - `URL`: enter the full URL; the node converts it to the Maltiverse URL checksum automatically
   - `SHA256`: enter a sample SHA256 hash
 
 Example values:
@@ -148,4 +148,4 @@ Then open `http://localhost:5678`, create `Maltiverse API` credentials, and add 
 
 ## Notes
 
-The `Search` operation supports both the default Maltiverse format and `stix2`. In the Maltiverse format, the node returns one n8n item per result; in `stix2`, it returns the raw STIX 2 payload. The `Lookup` operation retrieves a single indicator from the selected dataset and returns the API payload as-is. The upload and delete operations expect the indicator payload as JSON and always write to the tenant (platform) scope. This first version intentionally focuses on `/search`, `/count`, indicator lookups and the generic `/ioc` endpoint to keep the integration simple.
+The `Search` operation supports both the default Maltiverse format and `stix2`. In the Maltiverse format, the node returns one n8n item per result; in `stix2`, it returns the raw STIX 2 payload. The `Lookup` operation retrieves a single indicator from the selected dataset and returns the API payload as-is. For URL lookups, the node converts the provided URL to the Maltiverse URL checksum automatically. The upload and delete operations expect the indicator payload as JSON and always write to the tenant (platform) scope. This first version intentionally focuses on `/search`, `/count`, indicator lookups and the generic `/ioc` endpoint to keep the integration simple.
