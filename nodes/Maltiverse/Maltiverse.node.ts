@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import type {
 	IDataObject,
 	IExecuteFunctions,
@@ -145,7 +146,8 @@ const lookupFields: INodeProperties[] = [
 		},
 		default: '',
 		required: true,
-		description: 'Enter the full URL to retrieve',
+		description:
+			'Enter the full URL to retrieve. The node converts it to the Maltiverse URL checksum (SHA256) automatically.',
 	},
 	{
 		displayName: 'SHA256',
@@ -381,6 +383,14 @@ function getLookupValueParameterName(indicatorType: string): string {
 	}
 }
 
+function normalizeLookupValue(indicatorType: string, indicatorValue: string): string {
+	if (indicatorType === 'url') {
+		return createHash('sha256').update(indicatorValue, 'utf8').digest('hex');
+	}
+
+	return indicatorValue;
+}
+
 export class Maltiverse implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Maltiverse',
@@ -509,10 +519,11 @@ export class Maltiverse implements INodeType {
 				} else if (operation === 'lookup') {
 					const dataLayer = this.getNodeParameter('dataLayer', i) as string;
 					const indicatorType = this.getNodeParameter('indicatorType', i) as string;
-					const indicatorValue = this.getNodeParameter(
+					const rawIndicatorValue = this.getNodeParameter(
 						getLookupValueParameterName(indicatorType),
 						i,
 					) as string;
+					const indicatorValue = normalizeLookupValue(indicatorType, rawIndicatorValue);
 
 					responseData = await maltiverseApiRequest(this, {
 						method: 'GET',
